@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 
 public class Bubble : MonoBehaviour {
-	public float moveSpeed = 10f;
+	public float moveSpeed = 30f;
 
 	[SerializeField]
 	private Color bubbleColor;
@@ -21,8 +21,8 @@ public class Bubble : MonoBehaviour {
 
 	public List<GameObject> connectedBubbles;
 
-	Ray a;
-	Ray b;
+	Ray trace;
+	Ray traceReflected;
 	RaycastHit hit;
 
 	void Awake(){
@@ -63,11 +63,11 @@ public class Bubble : MonoBehaviour {
 		}
 
 		if (currentState == BubbleState.Movement) {
-			a = new Ray (transform.position, transform.up);
-			if (Deflect (a, out b, out hit)) {
-				Debug.Log ("Deflected");
-				Debug.DrawLine (a.origin, hit.point);
-				Debug.DrawLine (b.origin, b.origin + 10 * b.direction);
+			trace = new Ray (transform.position, transform.up);
+			if (Deflect (trace, out traceReflected, out hit)) {
+				Debug.Log ("Deflected: (" + traceReflected.origin.y + " - " + traceReflected.origin.x + ")");
+				Debug.DrawLine (trace.origin, hit.point);
+				Debug.DrawLine (traceReflected.origin, traceReflected.origin + 10 * traceReflected.direction);
 
 			}
 		}
@@ -79,14 +79,28 @@ public class Bubble : MonoBehaviour {
 
 	void OnCollisionEnter (Collision collision){
 		Debug.Log(collision.gameObject.name);
+		if (collision.gameObject.name.Equals (gameObject.name)) {
+			currentState = BubbleState.Stopped;
+			hadACollision = true;
+			Destroy (currentRigidBody);
+			connectedBubbles.Add (collision.gameObject);
+			if (connectedBubbles.Count >= 2) {
+				foreach (GameObject bubble in connectedBubbles) {
+					Destroy (bubble);
+				}
+				Destroy (this.gameObject);
+			}
+		}
 		if (collision.gameObject.name.Contains ("Up") || collision.gameObject.name.Contains ("Bubble")) {
 			currentState = BubbleState.Stopped;
 			hadACollision = true;
 			Destroy (currentRigidBody);
 		}
 		if (collision.gameObject.name.Contains ("Left") || collision.gameObject.name.Contains ("Right")) {
-			float rotateAngle = Mathf.Atan2 (b.origin.y, b.origin.x) * Mathf.Rad2Deg;
-			transform.rotation = Quaternion.Euler (0f, 0f, rotateAngle);
+			Vector3 difference = (traceReflected.origin + 10 * traceReflected.direction) - hit.point;
+			difference.Normalize ();
+			float rotateAngle = Mathf.Atan2 (difference.y, difference.x) * Mathf.Rad2Deg;
+			transform.rotation = Quaternion.Euler (0f, 0f, rotateAngle - 90);
 		}
 	}
 
