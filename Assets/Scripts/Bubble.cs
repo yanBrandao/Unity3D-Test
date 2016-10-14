@@ -7,6 +7,8 @@ public class Bubble : MonoBehaviour {
 	private Color bubbleColor;
 	private List<Color> colorList;
 
+	private Rigidbody currentRigidBody;
+
 	private MeshRenderer meshRender;
 
 	void Awake(){
@@ -22,8 +24,10 @@ public class Bubble : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 		GenerateBubbleColor ();
+		currentRigidBody = GetComponent<Rigidbody> ();
 		meshRender = GetComponent<MeshRenderer> ();
 		meshRender.material.color = bubbleColor;
+		gameObject.name = "Bubble " + bubbleColor;
 	}
 	
 	// Update is called once per frame
@@ -31,7 +35,14 @@ public class Bubble : MonoBehaviour {
 	
 	}
 
-	void GenerateBubbleColor(){
+	void GenerateBubbleColor (){
 		bubbleColor = colorList [Random.Range (0, TestControl.Instance.level)];
+	}
+
+	void OnCollisionEnter (Collision collision){
+		Debug.Log(collision.gameObject.name);
+		if (collision.gameObject.name.Contains ("Up") || collision.gameObject.name.Contains ("Bubble")) {
+			Destroy (currentRigidBody);
+		}
 	}
 }
