@@ -1,9 +1,11 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.SceneManagement;
 
 public class Bubble : MonoBehaviour {
 	public float moveSpeed = 30f;
+    public int level = 3;
 
 	[SerializeField]
 	private Color bubbleColor;
@@ -19,7 +21,21 @@ public class Bubble : MonoBehaviour {
 
 	private BubbleState currentState = BubbleState.Waiting;
 
-	public List<GameObject> connectedBubbles;
+	[SerializeField]
+	private List<GameObject> sameColorConnectedBubbles;
+
+	[SerializeField]
+	private bool passedThroughEndGame = false;
+
+	private float minimunHorizontalValue = -7f;
+	private float maximunHorizontalValue = 7.5f;
+	private float minimunVerticalValue = 2.44f;
+	private float maximunVerticalValue = 13f;
+
+	[SerializeField]
+	private List<float> verticalValues;
+
+	float checkRadius = 0.1f;
 
 	Ray trace;
 	Ray traceReflected;
@@ -27,6 +43,10 @@ public class Bubble : MonoBehaviour {
 
 	void Awake(){
 		colorList = new List<Color> ();
+		verticalValues = new List<float> ();
+		for (int i = 0; i < 14; i++) {
+			verticalValues.Add (minimunVerticalValue + (0.88f * i));
+		}
 		colorList.Add (Color.black); colorList.Add (Color.blue);
 		colorList.Add (Color.cyan); colorList.Add (Color.gray);
 		colorList.Add (Color.gray); colorList.Add (Color.green);
@@ -37,8 +57,10 @@ public class Bubble : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-		connectedBubbles = new List<GameObject> ();
+		sameColorConnectedBubbles = new List<GameObject> ();
+
 		GenerateBubbleColor ();
+
 		currentRigidBody = GetComponent<Rigidbody> ();
 		meshRender = GetComponent<MeshRenderer> ();
 		meshRender.material.color = bubbleColor;
@@ -47,73 +69,64 @@ public class Bubble : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-
-
 		if (Input.GetButtonDown ("Fire1") && currentState == BubbleState.Waiting) {
 			currentState = BubbleState.Movement;
-			Vector3 difference = Camera.main.ScreenToWorldPoint (Input.mousePosition) - transform.position;
-			difference.Normalize ();
+			gameObject.name += " Movement";
+			Vector3 direction = Camera.main.ScreenToWorldPoint (Input.mousePosition) - transform.position;
+			direction.Normalize ();
 
-			float rotateZ = Mathf.Atan2 (difference.y, difference.x) * Mathf.Rad2Deg;
-
-			transform.rotation = Quaternion.Euler (0f, 0f, rotateZ - 90);
-		}
-		if (hadACollision == false && (currentState != BubbleState.Waiting && currentState != BubbleState.Stopped)) {
-			transform.Translate (Vector3.up * Time.deltaTime * moveSpeed);
-		}
-
-		if (currentState == BubbleState.Movement) {
-			trace = new Ray (transform.position, transform.up);
-			if (Deflect (trace, out traceReflected, out hit)) {
-				Debug.Log ("Deflected: (" + traceReflected.origin.y + " - " + traceReflected.origin.x + ")");
-				Debug.DrawLine (trace.origin, hit.point);
-				Debug.DrawLine (traceReflected.origin, traceReflected.origin + 10 * traceReflected.direction);
-
-			}
+			currentRigidBody.velocity = direction * moveSpeed;
 		}
 	}
 
 	void GenerateBubbleColor (){
-		bubbleColor = colorList [Random.Range (0, TestControl.Instance.level)];
+		bubbleColor = colorList [Random.Range (0, level)];
 	}
 
 	void OnCollisionEnter (Collision collision){
-		Debug.Log(collision.gameObject.name);
-		if (collision.gameObject.name.Equals (gameObject.name)) {
+		/*if (collision.gameObject.name.Equals (gameObject.name)) {
 			currentState = BubbleState.Stopped;
 			hadACollision = true;
 			Destroy (currentRigidBody);
-			connectedBubbles.Add (collision.gameObject);
-			if (connectedBubbles.Count >= 2) {
-				foreach (GameObject bubble in connectedBubbles) {
+			sameColorConnectedBubbles.Add (collision.gameObject);
+			if (sameColorConnectedBubbles.Count >= 2) {
+				foreach (GameObject bubble in sameColorConnectedBubbles) {
 					Destroy (bubble);
 				}
 				Destroy (this.gameObject);
 			}
-		}
-		if (collision.gameObject.name.Contains ("Up") || collision.gameObject.name.Contains ("Bubble")) {
-			currentState = BubbleState.Stopped;
-			hadACollision = true;
-			Destroy (currentRigidBody);
+		}*/
+		if (collision.gameObject.name.Contains ("Up") || collision.gameObject.name.Contains ("Bubble") && collision.gameObject.name.Contains("Stopped")) {
+			if (currentState == BubbleState.Movement) {
+				currentState = BubbleState.Stopped;
+				gameObject.name = "Bubble " + bubbleColor + " Stopped";
+				hadACollision = true;
+				Destroy (currentRigidBody);
+				transform.localRotation = Quaternion.identity;
+				Vector3 thePosition = transform.localPosition;
+                thePosition.x = Mathf.Round (thePosition.x);
+				thePosition.y = Mathf.Floor (thePosition.y);
+				if (thePosition.y % 2 >= 1) {
+					thePosition.x += 0.5f;
+				}
+                if (thePosition.y <= 3){
+                    Debug.Log("[OnCollisionEnter]End Game");
+                    SceneManager.LoadScene("GameOver");
+                }
+				Debug.Log (thePosition);
+				Debug.Log ("[OnCollisionEnter]Position: " + Mathf.FloorToInt(thePosition.y) + " - " + 1 + " = " + (Mathf.FloorToInt(thePosition.y) - 1));
+				thePosition.y = verticalValues[(Mathf.FloorToInt(thePosition.y) - 1)];
+
+                //float calc = (13 % thePosition.y);
+                //Debug.Log ("13 % " + thePosition.y + ": " + calc);
+                //thePosition.y = 13 - ((13 % thePosition.y) * 0.85f);
+                //Debug.Log (thePosition);
+				transform.localPosition = thePosition;
+			}
 		}
 		if (collision.gameObject.name.Contains ("Left") || collision.gameObject.name.Contains ("Right")) {
-			Vector3 difference = (traceReflected.origin + 10 * traceReflected.direction) - hit.point;
-			difference.Normalize ();
-			float rotateAngle = Mathf.Atan2 (difference.y, difference.x) * Mathf.Rad2Deg;
-			transform.rotation = Quaternion.Euler (0f, 0f, rotateAngle - 90);
+			Debug.Log ("[OnCollisionEnter]Collision contacts: " + collision.contacts [0].normal);
+			currentRigidBody.velocity = Vector3.Reflect (transform.localPosition, collision.contacts [0].normal);
 		}
-	}
-
-	bool Deflect (Ray ray, out Ray deflected, out RaycastHit hit){
-		if (Physics.Raycast (ray, out hit)) {
-			Vector3 normal = hit.normal;
-			Vector3 deflect = Vector3.Reflect (ray.direction, normal);
-
-			deflected = new Ray (hit.point, deflect);
-			return true;
-		}
-
-		deflected = new Ray (Vector3.zero, Vector3.zero);
-		return false;
 	}
 }

@@ -4,13 +4,14 @@ using System.Collections;
 public class Cannon : MonoBehaviour {
 	public int rotationOffset = 0;
 
-	public Transform BubbleSpawnPosition;
+	public Transform bubbleSpawnPosition;
 
-	public GameObject Bubble;
+	public GameObject bubble;
 
 	void Start() {
-		Instantiate (Bubble, BubbleSpawnPosition.localPosition, BubbleSpawnPosition.rotation);
-	}
+        
+		Instantiate (bubble, bubbleSpawnPosition.localPosition, bubbleSpawnPosition.rotation);
+    }
 
 	public IEnumerator DoDelay(float seconds, System.Action callback){
 		yield return new WaitForSeconds (seconds);
@@ -18,7 +19,7 @@ public class Cannon : MonoBehaviour {
 	}
 
 	public void InstantiateAfterDelay(){
-		Instantiate(Bubble, BubbleSpawnPosition.localPosition, BubbleSpawnPosition.rotation);
+		Instantiate(bubble, bubbleSpawnPosition.localPosition, bubbleSpawnPosition.rotation);
 	}
 
 	// Update is called once per frame
