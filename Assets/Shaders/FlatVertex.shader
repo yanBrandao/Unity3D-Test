@@ -2,6 +2,9 @@ Shader "Flat Vertex"{
 	Properties{
 	}
 	SubShader{
+		//Flat Vertex shader remove all texture and deth from
+		// surface and put only color defined by meshFilter
+		// in UpdateVerts.
 		Pass{
 			CGPROGRAM
 			#pragma vertex vert

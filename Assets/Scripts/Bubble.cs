@@ -27,7 +27,7 @@ public class Bubble : MonoBehaviour {
 	private BubbleState currentState = BubbleState.Waiting;
 
 	[SerializeField]
-	private List<GameObject> sameColorConnectedBubbles;
+	private List<GameObject> sameColorConnectedBubbles; //Will contain a bubble with same color reference that collided with this bubble.
 
 	[SerializeField]
 	private bool passedThroughEndGame = false;
@@ -37,7 +37,7 @@ public class Bubble : MonoBehaviour {
 	private float minimunVerticalValue = 2.44f;
 	private float maximunVerticalValue = 13f;
     private float horizontalOffset = 0.5f;
-    private float verticalOffset = 0.85f;
+    private float verticalOffset = 0.88f;
 
 	[SerializeField]
 	private List<float> verticalValues;
@@ -50,22 +50,20 @@ public class Bubble : MonoBehaviour {
 
 	void Awake(){
 		colorList = new List<Color> ();
-		verticalValues = new List<float> ();
+		verticalValues = new List<float> (); // Vertical values contains every possible position that bubble can be stay.
 		for (int i = 0; i < 14; i++) {
-			verticalValues.Add (minimunVerticalValue + (0.88f * i));
+			verticalValues.Add (minimunVerticalValue + (verticalOffset * i));
 		}
-		colorList.Add (Color.black); colorList.Add (Color.blue);
-		colorList.Add (Color.cyan); colorList.Add (Color.gray);
-		colorList.Add (Color.gray); colorList.Add (Color.green);
-		colorList.Add (Color.grey); colorList.Add (Color.magenta);
-		colorList.Add (Color.red); colorList.Add (Color.yellow);
-		colorList.Add (Color.white);
+
+		// Added possible colors that bubble can be colored.
+		colorList.Add (Color.red); colorList.Add (Color.blue); colorList.Add (Color.green); colorList.Add (Color.white);
+		colorList.Add (Color.magenta); colorList.Add (Color.HSVToRGB(330, 59,100)); colorList.Add (Color.HSVToRGB(39,100,100)); colorList.Add (Color.HSVToRGB(240, 100,50));
+
 	}
 
 	// Use this for initialization
 	void Start () {
 		sameColorConnectedBubbles = new List<GameObject> ();
-
 		GenerateBubbleColor ();
         textPoints = points.GetComponent<TextMesh>();
         
@@ -73,11 +71,14 @@ public class Bubble : MonoBehaviour {
 		meshRender = GetComponent<MeshRenderer> ();
 		meshRender.material.color = bubbleColor;
 		gameObject.name = "Bubble " + bubbleColor;
-        TestControl.Instance.bubbleList.Add(this.gameObject);
+        TestControl.Instance.bubbleList.Add(this.gameObject); // Added this bubble to a list that contains every bubble in scene.
     }
 	
 	// Update is called once per frame
 	void Update () {
+		/* After every shoot, will be instantiate a new bubble on waiting state and
+		 * current bubble will set to Movement and got force direct to touch or mouse rotation and position.
+		 **/
 		if (Input.GetButtonDown ("Fire1") && currentState == BubbleState.Waiting) {
 			currentState = BubbleState.Movement;
 			gameObject.name += " Movement";
@@ -93,6 +94,10 @@ public class Bubble : MonoBehaviour {
 	}
 
 	void OnCollisionEnter (Collision collision){
+		/* This first check stopped bubble and change his current position to work like a grid.
+		 * The horizontal offset has 1 for odd Y axis and 0.5 for even Y axis;
+		 * The vertical offset has 0.88f for every X axis, starting from 13 on top of the box.
+		**/
 		if (collision.gameObject.name.Contains ("Up") || collision.gameObject.name.Contains ("Bubble") && collision.gameObject.name.Contains("Stopped")) {
 			if (currentState == BubbleState.Movement) {
 				currentState = BubbleState.Stopped;
@@ -123,8 +128,13 @@ public class Bubble : MonoBehaviour {
 				thePosition.y = verticalValues[(Mathf.FloorToInt(thePosition.y) - 1)];
                 Debug.Log("[OnCollisionEnter] After Round:" + thePosition);
                 transform.localPosition = Vector3.one * 100;
+				//The offset will be set in the returnCorrectPosition after check where bubble can be place.
 				transform.localPosition = returnCorretPosition(thePosition);
 			}
+			/*This check will create a list of same colors neighborhood.
+			 * If after this verification there are more then 2 bubble connecteds
+			 * Particles will be call and Points will be calculated.
+			 **/
             if (collision.gameObject.name.Equals(gameObject.name)) {
                 sameColorConnectedBubbles.Add(collision.gameObject);
                 if (sameColorConnectedBubbles.Count >= 2) {
@@ -153,6 +163,9 @@ public class Bubble : MonoBehaviour {
 			Debug.Log ("[OnCollisionEnter]Collision contacts: " + collision.contacts [0].normal);
 			currentRigidBody.velocity = Vector3.Reflect (transform.localPosition, collision.contacts [0].normal);
 		}
+		/*This check verify if the collision is a collectable
+		 * If is true, the power up will destroy every bubble with the same color using bubble list created before.
+		 */
         if (collision.gameObject.tag.Equals("Collectable")) {
             Vector3 direction = Camera.main.ScreenToWorldPoint(Input.mousePosition) - transform.position;
             direction.Normalize();
@@ -186,28 +199,30 @@ public class Bubble : MonoBehaviour {
         }
 	}
     
+	/* This function try to offset bubbles 
+	 */
     Vector3 returnCorretPosition(Vector3 objectPosition){
         Vector3 newPosition = Vector3.zero;
         if(!Physics.CheckSphere(objectPosition, checkRadius)) {
             Debug.Log("<color=red>[returnCorretPosition]</color>: Current position is available.");
             newPosition = objectPosition;
         } else {
-            objectPosition.y -= 0.85f; objectPosition.x -= 0.5f;
+			objectPosition.y -= verticalOffset; objectPosition.x -= horizontalOffset;
             if(!Physics.CheckSphere(objectPosition, checkRadius)) {
                 Debug.Log("<color=red>[returnCorretPosition]</color>: Top left is available.");
                 newPosition = objectPosition;
             } else {
-                objectPosition.x += 1;
+				objectPosition.x += horizontalOffset*2;
                 if (!Physics.CheckSphere(objectPosition, checkRadius)) {
                     Debug.Log("<color=red>[returnCorretPosition]</color>: Top right is available.");
                     newPosition = objectPosition;
                 } else {
-                    objectPosition.y += 1.7f;
+					objectPosition.y += verticalOffset*2;
                     if (!Physics.CheckSphere(objectPosition, checkRadius)) {
                         Debug.Log("<color=red>[returnCorretPosition]</color>: Bottom right is available.");
                         newPosition = objectPosition;
                     } else {
-                        objectPosition.x -= 1f;
+						objectPosition.x -= horizontalOffset*2;
                         if (!Physics.CheckSphere(objectPosition, checkRadius))
                         {
                             Debug.Log("<color=red>[returnCorretPosition]</color>: Bottom left is available.");

@@ -7,6 +7,9 @@
 	}
 	SubShader
 	{
+		//	Using BlinnPhong shading model this shader will put
+		// color in pixels setted by MeshFilter in UpdateVerts
+		// Script.
 		Tags { "RenderType"="Opaque" }
 		CGPROGRAM
 			#pragma surface surf BlinnPhong vertex:vert

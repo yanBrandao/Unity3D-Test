@@ -1,6 +1,6 @@
 # Unity3D-Test
 
-This project include a mini game with base physics of Puzzle Bobble game and a scenario colored and animated by vertex.
+This project includes a Puzzle Bubble physics based mini game and a colorful scenario animated by vertex.
 
 ## Running the application
 
@@ -18,12 +18,12 @@ install app.apk in your phone.
   * Physics interactions;
   * Collision detection;
   * Spawn objects automatically;
-  * Particles system after destroy objces;
-  * Assets combination 3D with 2D.
+  * Particles system after destroy objetcs;
+  * 2D and 3D assets combined;
   * Use of shaders to set different colored objects.
   
 **Scene (3): GameOver**
-  Presents the game over of mini game, and show UI buttons to restart or back to menu.
+  Presents the game over of mini game, and shows UI buttons to restart or back to menu.
   
 **Scene (4): TreeVertex**
   Presents a field of trees colored by vertex shaders and a wave animated by vertex using sin wave.

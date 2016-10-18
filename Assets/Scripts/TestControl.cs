@@ -24,8 +24,7 @@ public class TestControl : MonoBehaviour {
 	void Start() {
 		bubbleList = new List<GameObject> ();
 	}
-	
-	// Update is called once per frame
+
 	void Update () {
 		bubbleList.RemoveAll (item => item == null);
 	}

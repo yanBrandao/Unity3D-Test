@@ -7,7 +7,7 @@
 		LOD 200
 		
 		CGPROGRAM
-		// Physically based Standard lighting model, and enable shadows on all light types
+
 		#pragma surface surf Lambert vertex:vert
 
 
@@ -17,6 +17,9 @@
 			float2 uv_MainTex;
 		};
 
+		//  Vertex function will offset pixel position
+		// according to sin function and time variation
+		// creating a wave in the object. 
 		void vert(inout appdata_full v) {
 			half offsetvert = sin(v.vertex.x + _Time[1]);
 

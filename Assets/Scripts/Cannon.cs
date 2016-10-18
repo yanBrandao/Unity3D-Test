@@ -4,6 +4,7 @@ using System.Collections;
 public class Cannon : MonoBehaviour {
 	public int rotationOffset = 0;
 
+	//This transform will define the position that bubble need to spawn.
 	public Transform bubbleSpawnPosition;
 
 	public GameObject bubble;
@@ -14,6 +15,7 @@ public class Cannon : MonoBehaviour {
     }
 
 	public IEnumerator DoDelay(float seconds, System.Action callback){
+		//this callback will delay the instantiation.
 		yield return new WaitForSeconds (seconds);
 		callback ();
 	}
@@ -31,6 +33,7 @@ public class Cannon : MonoBehaviour {
 
 		transform.rotation = Quaternion.Euler (0f, 0f, rotateZ + rotationOffset);
 
+		// This Coroutine will start after 0.1 seconds to Instantiate bubble.
 		if (Input.GetButtonDown ("Fire1")) {
 			StartCoroutine (DoDelay(0.1f, InstantiateAfterDelay));
 		}
