@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 
 public class TestControl : MonoBehaviour {
-
 	public GameObject bubbleToSpawn;
 	public int level = 1;
 

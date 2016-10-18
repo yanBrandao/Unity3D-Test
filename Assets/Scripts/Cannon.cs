@@ -19,8 +19,8 @@ public class Cannon : MonoBehaviour {
 	}
 
 	public void InstantiateAfterDelay(){
-		Instantiate(bubble, bubbleSpawnPosition.localPosition, bubbleSpawnPosition.rotation);
-	}
+        Instantiate(bubble, bubbleSpawnPosition.localPosition, bubbleSpawnPosition.rotation);
+    }
 
 	// Update is called once per frame
 	void Update () {
